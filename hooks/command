@@ -139,7 +139,8 @@ bash_ops+=("-c") # Needed, don't remove
 # ANKA RUN
 
 echo "+++ Adding mobile_onboarding deploy key in $job_image_name"
-anka mount $job_image_name ~/.ssh /Users/anka/.ssh
+plugin_prompt_and_run anka start $job_image_name
+plugin_prompt_and_run anka mount $job_image_name ~/.ssh /Users/anka/.ssh
 
 commands=()
 while IFS='' read -r line; do commands+=("${PRE_EXECUTE_SLEEP}${PRE_EXECUTE_PING_SLEEP}$line"); done <<< "$BUILDKITE_COMMAND"
@@ -148,6 +149,8 @@ for command in "${commands[@]:-}"; do
   # shellcheck disable=SC2086
   plugin_prompt_and_run anka $ANKA_DEBUG run "${run_args[@]:+${run_args[@]}}" bash "${bash_ops[@]:+${bash_ops[@]}}" "$command"
 done
+
+plugin_prompt_and_run anka unmount -a $job_image_name
 
 ########################################
 # POST (anka run) host command execution
