@@ -137,7 +137,9 @@ bash_ops+=("-c") # Needed, don't remove
 
 ##########
 # ANKA RUN
-run_args+=("--volume" "~/.ssh:/Users/anka/.ssh")
+
+echo "+++ Adding mobile_onboarding deploy key in $job_image_name"
+anka mount $job_image_name ~/.ssh /Users/anka/.ssh
 
 commands=()
 while IFS='' read -r line; do commands+=("${PRE_EXECUTE_SLEEP}${PRE_EXECUTE_PING_SLEEP}$line"); done <<< "$BUILDKITE_COMMAND"
