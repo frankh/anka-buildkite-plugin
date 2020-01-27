@@ -58,6 +58,9 @@ fi
 # Mount host directory (current directory by default)
 if [[ -n $(plugin_read_config VOLUME) ]] ; then
   run_args+=("--volume" "$(plugin_read_config VOLUME)")
+else
+  current_directory=$(pwd)
+  run_args+=("--volume" "$current_directory:/Users/anka/app")
 fi
 # Prevent the mounting of the host directory
 # shellcheck disable=SC2091
