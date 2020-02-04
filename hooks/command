@@ -127,10 +127,7 @@ bash_ops+=("-c") # Needed, don't remove
 echo "+++ Adding mobile_onboarding deploy key in $job_image_name"
 plugin_prompt_and_run anka start $job_image_name
 plugin_prompt_and_run anka mount $job_image_name ~/.ssh /Users/anka/.ssh
-plugin_prompt_and_run anka run $job_image_name bash -c "git checkout-index -a -f --prefix=/Users/anka/app/"
-
-# Prevent the mounting of the host directory
-run_args+=("--no-volume")
+plugin_prompt_and_run anka run $job_image_name bash -c "git checkout-index -a -f --prefix=/Users/anka/app/ && ln -s \$(pwd)/.git /Users/anka/app/.git"
 
 # Working directory inside the VM
 if [[ -n $(plugin_read_config WORKDIR) ]] ; then
