@@ -129,6 +129,8 @@ plugin_prompt_and_run anka start $job_image_name
 plugin_prompt_and_run anka mount $job_image_name ~/.ssh /Users/anka/.ssh
 plugin_prompt_and_run anka run $job_image_name bash -c "git checkout-index -a -f --prefix=/Users/anka/app/ && ln -s \$(pwd)/.git /Users/anka/app/.git"
 
+# Set anka command before workdir added as for cache we want the default
+CACHE_ANKA_CMD="anka $ANKA_DEBUG run ${run_args[@]:+${run_args[@]}} $job_image_name"
 # Working directory inside the VM
 if [[ -n $(plugin_read_config WORKDIR) ]] ; then
   run_args+=("--workdir" "$(plugin_read_config WORKDIR)")
@@ -138,12 +140,25 @@ fi
 run_args+=("$job_image_name")
 
 commands=()
+
+CACHE_OPTIONS="-c $DIR/../cache/cache_config.yaml --s3-bucket cb-buildkite-ios-setup --s3-prefix buildkite-cache/$BUILDKITE_PIPELINE_SLUG --anka-command \"$CACHE_ANKA_CMD\""
+if [[ -n $(plugin_read_config CACHE) ]] ; then
+  echo "$(plugin_read_config CACHE)" > $DIR/../cache/cache_config.yaml
+  echo "+++ Restoring caches"
+  bash -c "ruby $DIR/../cache/cache.rb restore-caches $CACHE_OPTIONS"
+fi
+
 while IFS='' read -r line; do commands+=("${PRE_EXECUTE_SLEEP}${PRE_EXECUTE_PING_SLEEP}$line"); done <<< "$BUILDKITE_COMMAND"
 for command in "${commands[@]:-}"; do
   echo "+++ Executing $command in $job_image_name"
   # shellcheck disable=SC2086
   plugin_prompt_and_run anka $ANKA_DEBUG run "${run_args[@]:+${run_args[@]}}" bash "${bash_ops[@]:+${bash_ops[@]}}" "$command"
 done
+
+if [[ -n $(plugin_read_config CACHE) ]] ; then
+  echo "+++ Uploading caches"
+  bash -c "ruby $DIR/../cache/cache.rb save-caches $CACHE_OPTIONS"
+fi
 
 plugin_prompt_and_run anka unmount -a $job_image_name
 

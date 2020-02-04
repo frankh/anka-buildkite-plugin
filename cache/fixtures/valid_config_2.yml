@@ -1,0 +1,5 @@
+- keys:
+  - v1-gemfile-test1
+  - v1-gemfile-test
+  paths:
+  - mobile/vendor/bundle

@@ -49,6 +49,8 @@ configuration:
       type: integer
     start-devices:
       type: array
+    cache:
+      type: string
   required:
     - vm-name
 additionalProperties: false

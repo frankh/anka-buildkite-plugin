@@ -1,0 +1,5 @@
+- keys:
+  - pro-applications-enterprise/v3-gemfile-hash-goes-here
+  - pro-applications-enterprise/v3-gemfile-
+  paths:
+  - mobile/vendor/bundle

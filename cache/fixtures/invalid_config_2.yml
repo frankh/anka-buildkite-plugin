@@ -1,0 +1,13 @@
+- keys:
+  - v1-gemfile-test1
+  - v1-gemfile-test
+  paths:
+  - mobile/vendor/bundle
+  third: why
+- keys:
+  - v1-yarn-test1
+  - v1-yarn-test
+  paths:
+  - node_modules
+  - workspaces/onboarding/node_modules
+

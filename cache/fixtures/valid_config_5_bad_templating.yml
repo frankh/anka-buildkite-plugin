@@ -1,0 +1,5 @@
+- keys:
+  - v1-gemfile-{{ .Nothing }}
+  - v1-gemfile-test
+  paths:
+  - mobile/vendor/bundle
