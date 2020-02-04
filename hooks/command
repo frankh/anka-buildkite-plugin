@@ -51,25 +51,9 @@ fi
 #######################################
 # Parse out all the run command options
 run_args=()
-# Working directory inside the VM
-if [[ -n $(plugin_read_config WORKDIR) ]] ; then
-  run_args+=("--workdir" "$(plugin_read_config WORKDIR)")
-fi
-# Mount host directory (current directory by default)
-if [[ -n $(plugin_read_config VOLUME) ]] ; then
-  run_args+=("--volume" "$(plugin_read_config VOLUME)")
-else
-  current_directory=$(pwd)
-  run_args+=("--volume" "$current_directory:/Users/anka/app")
-fi
-# Prevent the mounting of the host directory
-# shellcheck disable=SC2091
-if $(plugin_read_config NO_VOLUME false); then
-  run_args+=("--no-volume")
-fi
 # Inherit environment variables from host
 # shellcheck disable=SC2091
-if $(plugin_read_config INHERIT_ENVIRONMENT_VARS false) ; then
+if $(plugin_read_config INHERIT_ENVIRONMENT_VARS true) ; then
   run_args+=("--env")
 fi
 # Provide an environment variable file
@@ -78,10 +62,9 @@ if [[ -n $(plugin_read_config ENVIRONMENT_FILE) ]] ; then
 fi
 # Wait to start processing until network can be established
 # shellcheck disable=SC2091
-if $(plugin_read_config WAIT_NETWORK false); then
+if $(plugin_read_config WAIT_NETWORK true); then
   run_args+=("--wait-network")
 fi
-run_args+=("$job_image_name")
 #
 echo "--- :anka: Cloning $(plugin_read_config VM_NAME) to $job_image_name"
 # shellcheck disable=SC2086,SC2154
@@ -144,6 +127,18 @@ bash_ops+=("-c") # Needed, don't remove
 echo "+++ Adding mobile_onboarding deploy key in $job_image_name"
 plugin_prompt_and_run anka start $job_image_name
 plugin_prompt_and_run anka mount $job_image_name ~/.ssh /Users/anka/.ssh
+plugin_prompt_and_run anka run $job_image_name bash -c "git checkout-index -a -f --prefix=/Users/anka/app/"
+
+# Prevent the mounting of the host directory
+run_args+=("--no-volume")
+
+# Working directory inside the VM
+if [[ -n $(plugin_read_config WORKDIR) ]] ; then
+  run_args+=("--workdir" "$(plugin_read_config WORKDIR)")
+else
+  run_args+=("--workdir" "/Users/anka/app/")
+fi
+run_args+=("$job_image_name")
 
 commands=()
 while IFS='' read -r line; do commands+=("${PRE_EXECUTE_SLEEP}${PRE_EXECUTE_PING_SLEEP}$line"); done <<< "$BUILDKITE_COMMAND"
