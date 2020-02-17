@@ -1,7 +1,8 @@
 #!/usr/bin/env ruby
 
-require "pry"
-require_relative "cache"
+require 'fileutils'
+require 'tmpdir'
+require_relative 'cache'
 
 describe BuildkiteCacheCommand do
   let (:config_file) { "valid_config_1.yml" }
@@ -95,21 +96,32 @@ describe BuildkiteCacheCommand do
     before :each do
       ARGV.replace valid_args
       command.opt_parse!
+      @tmpdir = Dir.mktmpdir
+      @olddir = Dir.pwd
+      Dir.chdir @tmpdir
+    end
+
+    after :each do
+      Dir.chdir @olddir
+      FileUtils.remove_entry @tmpdir
     end
 
     it "restores each cache in config" do
       expect(command).to receive(:aws_list_caches).twice.and_return ["pipeline/test-cache"]
-      expect(command).to receive(:aws_download_cache).twice.and_return nil
+      expect(command).to receive(:aws_download_cache).twice do
+        FileUtils.mkdir_p ".buildkite_restored_caches"
+        FileUtils.touch ".buildkite_restored_caches/pipeline_test-cache.tar.gz"
+      end
       command.instance_variable_set(:@command, "restore-caches")
       command.instance_variable_set(:@anka, "echo")
-      expect{ command.run }.to output(/tar -xzf \\\$CACHE_FILE/).to_stdout
+      expect{ command.run }.to output(/Extracting caches/).to_stdout
     end
 
     it "saves each cache in config" do
       expect(command).to receive(:aws_upload_cache).twice.and_return nil
       command.instance_variable_set(:@command, "save-caches")
       command.instance_variable_set(:@anka, "echo")
-      expect{ command.run }.to output(/tar -czf \\\$CACHE_FILE/).to_stdout
+      expect{ command.run }.to output(/v1-gemfile-test1.tar.gz/).to_stdout
     end
   end
 end
